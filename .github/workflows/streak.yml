@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   auto:
@@ -17,13 +18,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Commit & push
+      - name: Commit, PR & Merge
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config user.name "MansoobeZahra"
-          git config user.email "149682728+MansoobeZahra@users.noreply.github.com"
+          git config user.email "mansoobezehra@gmail.com"
           
           # Determine number of commits to make
           if [ "${{ github.event.schedule }}" = "0 5 * * *" ]; then
@@ -35,6 +36,10 @@ jobs:
             echo "Regular schedule or manual trigger: making 1 commit."
           fi
           
+          # Create a unique branch name
+          BRANCH_NAME="streak-update-$(date +%Y%m%d%H%M%S)-$RANDOM"
+          git checkout -b "$BRANCH_NAME"
+          
           for ((i=1; i<=NUM_COMMITS; i++)); do
             sleep 1
             echo "$(date -u)" >> daily.txt
@@ -42,8 +47,18 @@ jobs:
             git commit -m "auto streak $(date -u) ($i/$NUM_COMMITS)"
           done
           
-          # Pull latest changes to avoid potential push conflicts
-          git pull --rebase https://x-access-token:${GH_TOKEN}@github.com/MansoobeZahra/B-Komachi.git HEAD:main || true
+          # Push the branch to origin
+          git push https://x-access-token:${GH_TOKEN}@github.com/MansoobeZahra/B-Komachi.git "$BRANCH_NAME"
           
-          # Push to GitHub
-          git push https://x-access-token:${GH_TOKEN}@github.com/MansoobeZahra/B-Komachi.git HEAD:main
+          # Create Pull Request
+          export GH_TOKEN="${{ secrets.GITHUB_TOKEN }}"
+          PR_URL=$(gh pr create \
+            --title "Auto Streak Update $(date +%Y-%m-%d)" \
+            --body "Automated contribution streak update." \
+            --head "$BRANCH_NAME" \
+            --base main)
+          
+          echo "Created Pull Request: $PR_URL"
+          
+          # Merge the Pull Request and delete the temporary branch
+          gh pr merge "$PR_URL" --merge --delete-branch
