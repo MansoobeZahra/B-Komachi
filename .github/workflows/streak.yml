@@ -23,7 +23,7 @@ jobs:
       - name: Commit, PR & Merge
         shell: bash
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.MY_PAT }}
         run: |
           git config user.name "MansoobeZahra"
           git config user.email "mansoobezehra@gmail.com"
@@ -53,7 +53,7 @@ jobs:
           git push https://x-access-token:${GH_TOKEN}@github.com/MansoobeZahra/B-Komachi.git "$BRANCH_NAME"
           
           # Create Pull Request
-          export GH_TOKEN="${{ secrets.GITHUB_TOKEN }}"
+          export GH_TOKEN="${{ secrets.MY_PAT }}"
           PR_URL=$(gh pr create \
             --title "Auto Streak Update $(date +%Y-%m-%d)" \
             --body "Automated contribution streak update." \
