@@ -25,6 +25,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.MY_PAT }}
         run: |
+          set -e
+          set -x
           git config user.name "MansoobeZahra"
           git config user.email "mansoobezehra@gmail.com"
           
@@ -49,12 +51,12 @@ jobs:
             git commit -m "auto streak $(date -u) ($i/$NUM_COMMITS)"
           done
           
-          # Push the branch to origin
+          # Push the branch to origin using PAT
           git push https://x-access-token:${GH_TOKEN}@github.com/MansoobeZahra/B-Komachi.git "$BRANCH_NAME"
           
-          # Create Pull Request
-          export GH_TOKEN="${{ secrets.MY_PAT }}"
+          # Create Pull Request using PAT with explicit repo
           PR_URL=$(gh pr create \
+            --repo MansoobeZahra/B-Komachi \
             --title "Auto Streak Update $(date +%Y-%m-%d)" \
             --body "Automated contribution streak update." \
             --head "$BRANCH_NAME" \
@@ -63,4 +65,4 @@ jobs:
           echo "Created Pull Request: $PR_URL"
           
           # Merge the Pull Request and delete the temporary branch
-          gh pr merge "$PR_URL" --merge --delete-branch
+          gh pr merge "$PR_URL" --merge --delete-branch --repo MansoobeZahra/B-Komachi
