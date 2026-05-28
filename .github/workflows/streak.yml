@@ -20,10 +20,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Commit, PR & Merge
+      - name: Commit & Push directly to main
         shell: bash
         env:
-          GH_TOKEN: ${{ secrets.MY_PAT }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -e
           set -x
@@ -40,9 +40,9 @@ jobs:
             echo "Regular schedule or manual trigger: making 1 commit."
           fi
           
-          # Create a unique branch name
-          BRANCH_NAME="streak-update-$(date +%Y%m%d%H%M%S)-$RANDOM"
-          git checkout -b "$BRANCH_NAME"
+          # We make commits directly on the main branch
+          # Pull latest changes to avoid conflicts
+          git pull origin main
           
           for ((i=1; i<=NUM_COMMITS; i++)); do
             sleep 1
@@ -51,18 +51,5 @@ jobs:
             git commit -m "auto streak $(date -u) ($i/$NUM_COMMITS)"
           done
           
-          # Push the branch to origin using PAT
-          git push https://x-access-token:${GH_TOKEN}@github.com/MansoobeZahra/B-Komachi.git "$BRANCH_NAME"
-          
-          # Create Pull Request using PAT with explicit repo
-          PR_URL=$(gh pr create \
-            --repo MansoobeZahra/B-Komachi \
-            --title "Auto Streak Update $(date +%Y-%m-%d)" \
-            --body "Automated contribution streak update." \
-            --head "$BRANCH_NAME" \
-            --base main)
-          
-          echo "Created Pull Request: $PR_URL"
-          
-          # Merge the Pull Request and delete the temporary branch
-          gh pr merge "$PR_URL" --merge --delete-branch --repo MansoobeZahra/B-Komachi
+          # Push directly to main branch
+          git push origin main
